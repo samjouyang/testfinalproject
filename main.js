@@ -86,7 +86,7 @@ d3.csv("combined_data.csv", d => {
         { key: "Blood_pressure", color: "#e74c3c", id: "bp-check"},
         { key: "right_MCA_BFV", color: "#3498db", id: "rbfv-check"},
         { key: "left_MCA_BFV", color: "#c842f5", id: "lbfv-check"},
-        { key: "resp_uncalibrated", color: "#2ecc71", id: "resp-check"}
+        // { key: "resp_uncalibrated", color: "#2ecc71", id: "resp-check"}
       ];
 
     // For each variable, check if its checkbox is checked before drawing its line
@@ -97,7 +97,7 @@ d3.csv("combined_data.csv", d => {
           .attr("fill", "none")
           .attr("stroke", line.color)
           .attr("stroke-width", 2)
-          .attr("opacity", 0.6) // Added opacity setting
+          .attr("opacity", 0.7) // Added opacity setting
           .attr("d", d3.line().x(d => x(d.Time)).y(d => y(d[line.key])));
       }
     });
@@ -144,10 +144,39 @@ d3.csv("combined_data.csv", d => {
         .text("Your Resting BP");
     }
 
-    d3.select("#ts-annotation").text("When you stand, your blood pressure dips and the brain’s blood flow begins to compensate—but notice the subtle delay, therefore revealing the critical moments of response.");
+    d3.select("#ts-annotation").text("When you stand, your blood pressure dips and the brain's blood flow begins to compensate—but notice the subtle delay.");
   }
 
   // --- Phase-Specific Summary Dashboard ---
+  // function updatePhaseSummary(subject, phase) {
+  //   const svg = d3.select("#phaseSummaryChart").html("")
+  //     .append("svg")
+  //     .attr("width", width + margin.left + margin.right)
+  //     .attr("height", height + margin.top + margin.bottom)
+  //     .append("g")
+  //     .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  //   const subjectData = data.filter(d => d.Subject === subject && d.Phase === phase);
+  //   const averages = measurements.map(m => ({ key: m, value: d3.mean(subjectData, d => d[m]) }));
+
+  //   const x = d3.scaleBand().domain(measurements).range([0, width]).padding(0.1);
+  //   // Set a fixed y-axis scale with maximum value of 65
+  //   const yScale = d3.scaleLinear().domain([0, 180]).range([height, 0]);
+
+  //   svg.selectAll(".bar")
+  //     .data(averages)
+  //     .enter()
+  //     .append("rect")
+  //     .attr("x", d => x(d.key))
+  //     .attr("y", d => yScale(d.value))
+  //     .attr("width", x.bandwidth())
+  //     .attr("height", d => height - yScale(d.value))
+  //     .attr("fill", "#3498db");
+
+  //   svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+  //   svg.append("g").call(d3.axisLeft(yScale));
+  // }
+
   function updatePhaseSummary(subject, phase) {
     const svg = d3.select("#phaseSummaryChart").html("")
       .append("svg")
@@ -157,10 +186,13 @@ d3.csv("combined_data.csv", d => {
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     const subjectData = data.filter(d => d.Subject === subject && d.Phase === phase);
-    const averages = measurements.map(m => ({ key: m, value: d3.mean(subjectData, d => d[m]) }));
+    
+    // Filter out "resp_uncalibrated" from measurements
+    const filteredMeasurements = measurements.filter(m => m !== "resp_uncalibrated");
 
-    const x = d3.scaleBand().domain(measurements).range([0, width]).padding(0.1);
-    // Set a fixed y-axis scale with maximum value of 65
+    const averages = filteredMeasurements.map(m => ({ key: m, value: d3.mean(subjectData, d => d[m]) }));
+
+    const x = d3.scaleBand().domain(filteredMeasurements).range([0, width]).padding(0.1);
     const yScale = d3.scaleLinear().domain([0, 180]).range([height, 0]);
 
     svg.selectAll(".bar")
@@ -175,7 +207,7 @@ d3.csv("combined_data.csv", d => {
 
     svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     svg.append("g").call(d3.axisLeft(yScale));
-  }
+}
 
   // --- Correlation Explorer ---
   function updateCorrelation(subject, var1, var2) {
@@ -285,7 +317,7 @@ d3.csv("combined_data.csv", d => {
       cursor.attr("cx", x(subjectData[i].Time))
         .attr("cy", y(subjectData[i].Blood_pressure));
       d3.select("#journey-text").text(
-        `At ${(subjectData[i].Time / 60).toFixed(1)} min: BP = ${subjectData[i].Blood_pressure.toFixed(1)} mmHg, Phase: ${subjectData[i].Phase} – And your body initiates its response, but note the brief lag, therefore the adjustment is gradual.`
+        `At ${(subjectData[i].Time / 60).toFixed(1)} min: BP = ${subjectData[i].Blood_pressure.toFixed(1)} mmHg, Phase: ${subjectData[i].Phase} – And your body initiates its response, but note the brief lag.`
       );
       i = (i + 1) % subjectData.length;
     }
@@ -346,7 +378,7 @@ d3.csv("combined_data.csv", d => {
   function setupQuiz() {
     d3.select("#quiz-up").on("click", () => d3.select("#quizResult").text("Correct! As you stand, BFV increases to compensate."));
     d3.select("#quiz-down").on("click", () => d3.select("#quizResult").text("Not quite. BFV typically rises rather than drops."));
-    d3.select("#quiz-steady").on("click", () => d3.select("#quizResult").text("Nope! The dynamic change is key."));
+    d3.select("#quiz-steady").on("click", () => d3.select("#quizResult").text("Nope! The change is key."));
   }
 
   // --- Scrollytelling ---
