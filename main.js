@@ -65,7 +65,7 @@ d3.csv("combined_data.csv", d => {
   function updateTimeSeries(subject) {
     const svg = d3.select("#timeSeriesChart").html("")
       .append("svg")
-      .attr("width", width + margin.left + margin.right)
+      .attr("width", width + margin.left + margin.right + 100) // Increased width for legend
       .attr("height", height + margin.top + margin.bottom)
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
@@ -177,7 +177,7 @@ d3.csv("combined_data.csv", d => {
 
     // Create a unified legend container positioned further to the right
     const legendContainer = svg.append('g')
-      .attr('transform', `translate(${width + 20}, 10)`);
+      .attr('transform', `translate(${width + 40}, 10)`); // Adjusted position for more space
     
     // Add measurement legend
     const measurementLegend = legendContainer.append('g');
@@ -190,10 +190,10 @@ d3.csv("combined_data.csv", d => {
       .style('font-size', '12px')
       .text('Measurements:');
     
-    // Add measurement items to legend
+    // Add measurement items to legend with increased spacing
     lines.forEach((line, i) => {
       const g = measurementLegend.append('g')
-        .attr('transform', `translate(0, ${i * 20 + 15})`);
+        .attr('transform', `translate(0, ${i * 25 + 20})`); // Increased vertical spacing
       
       g.append('line')
         .attr('x1', 0)
@@ -316,40 +316,6 @@ d3.csv("combined_data.csv", d => {
 
 
 
-
-
-
-
-
-  // --- Phase-Specific Summary Dashboard ---
-  // function updatePhaseSummary(subject, phase) {
-  //   const svg = d3.select("#phaseSummaryChart").html("")
-  //     .append("svg")
-  //     .attr("width", width + margin.left + margin.right)
-  //     .attr("height", height + margin.top + margin.bottom)
-  //     .append("g")
-  //     .attr("transform", `translate(${margin.left},${margin.top})`);
-
-  //   const subjectData = data.filter(d => d.Subject === subject && d.Phase === phase);
-  //   const averages = measurements.map(m => ({ key: m, value: d3.mean(subjectData, d => d[m]) }));
-
-  //   const x = d3.scaleBand().domain(measurements).range([0, width]).padding(0.1);
-  //   // Set a fixed y-axis scale with maximum value of 65
-  //   const yScale = d3.scaleLinear().domain([0, 180]).range([height, 0]);
-
-  //   svg.selectAll(".bar")
-  //     .data(averages)
-  //     .enter()
-  //     .append("rect")
-  //     .attr("x", d => x(d.key))
-  //     .attr("y", d => yScale(d.value))
-  //     .attr("width", x.bandwidth())
-  //     .attr("height", d => height - yScale(d.value))
-  //     .attr("fill", "#3498db");
-
-  //   svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-  //   svg.append("g").call(d3.axisLeft(yScale));
-  // }
 
   function updatePhaseSummary(subject, phase) {
     const svg = d3.select("#phaseSummaryChart").html("")
