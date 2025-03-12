@@ -125,7 +125,7 @@ d3.csv("combined_data.csv", d => {
           .attr("fill", "none")
           .attr("stroke", line.color)
           .attr("stroke-width", 2)
-          .attr("opacity", 0.8)
+          .attr("opacity", 0.7)
           .attr("d", d3.line().x(d => x(d.Time)).y(d => y(d[line.key])));
       }
     });
@@ -325,15 +325,20 @@ d3.csv("combined_data.csv", d => {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const subjectData = data.filter(d => d.Subject === subject && d.Phase === phase);
+    // Filter data for the selected subject across all phases
+    const subjectData = data.filter(d => d.Subject === subject);
+    const phaseData = subjectData.filter(d => d.Phase === phase);
     
     // Filter out "resp_uncalibrated" from measurements
     const filteredMeasurements = measurements.filter(m => m !== "resp_uncalibrated");
 
-    const averages = filteredMeasurements.map(m => ({ key: m, value: d3.mean(subjectData, d => d[m]) }));
+    const averages = filteredMeasurements.map(m => ({ key: m, value: d3.mean(phaseData, d => d[m]) }));
+
+    // Calculate the maximum value for the y-axis scale based on the entire subject data
+    const maxValue = d3.max(subjectData, d => Math.max(d.Blood_pressure, d.right_MCA_BFV, d.left_MCA_BFV));
 
     const x = d3.scaleBand().domain(filteredMeasurements).range([0, width]).padding(0.1);
-    const yScale = d3.scaleLinear().domain([0, 180]).range([height, 0]);
+    const yScale = d3.scaleLinear().domain([0, maxValue / 1.5]).range([height, 0]); // Use maxValue from all phases
 
     svg.selectAll(".bar")
       .data(averages)
