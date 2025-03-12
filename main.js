@@ -60,7 +60,8 @@ d3.csv("combined_data.csv", d => {
     updateTimeSeries(currentSubject);
   });
 
-  // --- Interactive Time Series Explorer ---
+
+
   function updateTimeSeries(subject) {
     const svg = d3.select("#timeSeriesChart").html("")
       .append("svg")
@@ -73,6 +74,33 @@ d3.csv("combined_data.csv", d => {
     const x = d3.scaleLinear().domain(d3.extent(subjectData, d => d.Time)).range([0, width]);
     const y = d3.scaleLinear().domain([0, d3.max(subjectData, d => Math.max(d.Blood_pressure, d.right_MCA_BFV, d.left_MCA_BFV, d.resp_uncalibrated))]).range([height, 0]);
 
+    // Define phase boundaries based on the data
+    const phaseTransitions = {
+      restToStand: subjectData.find(d => d.Phase === "Standing")?.Time || (x.domain()[0] + (x.domain()[1] - x.domain()[0]) * 0.4),
+      standToSit: subjectData.find(d => d.Phase === "Sitting")?.Time || (x.domain()[0] + (x.domain()[1] - x.domain()[0]) * 0.7)
+    };
+
+    // Define the phases with actual time values
+    const phases = [
+      { name: "Rest Phase", start: x.domain()[0], end: phaseTransitions.restToStand, color: "rgba(200, 230, 200, 0.3)" },
+      { name: "Stand-Up Phase", start: phaseTransitions.restToStand, end: phaseTransitions.standToSit, color: "rgba(230, 200, 200, 0.3)" },
+      { name: "Sit-Down Phase", start: phaseTransitions.standToSit, end: x.domain()[1], color: "rgba(200, 200, 230, 0.3)" }
+    ];
+
+    // Add background highlights for each phase
+    phases.forEach(phase => {
+      svg.append('rect')
+        .attr('x', x(phase.start))
+        .attr('y', 0)
+        .attr('width', x(phase.end) - x(phase.start))
+        .attr('height', height)
+        .attr('fill', phase.color)
+        .attr('class', 'phase-highlight');
+    });
+    
+    // Remove the phase labels from the top of the chart
+    // (We'll add them to the legend instead)
+
     // Create ticks at 5-minute intervals (300 seconds) and ensure final tick is the domain end
     const tickInterval = 300;
     const domainStart = x.domain()[0];
@@ -83,10 +111,10 @@ d3.csv("combined_data.csv", d => {
 
     // Define lines to plot with corresponding checkbox IDs
     const lines = [
-        { key: "Blood_pressure", color: "#e74c3c", id: "bp-check"},
-        { key: "right_MCA_BFV", color: "#3498db", id: "rbfv-check"},
-        { key: "left_MCA_BFV", color: "#c842f5", id: "lbfv-check"},
-        // { key: "resp_uncalibrated", color: "#2ecc71", id: "resp-check"}
+        { key: "Blood_pressure", color: "#e74c3c", id: "bp-check", label: "Blood Pressure"},
+        { key: "right_MCA_BFV", color: "#3498db", id: "rbfv-check", label: "Right Brain Blood Flow"},
+        { key: "left_MCA_BFV", color: "#c842f5", id: "lbfv-check", label: "Left Brain Blood Flow"},
+        // { key: "resp_uncalibrated", color: "#2ecc71", id: "resp-check", label: "Respiratory Pattern"}
       ];
 
     // For each variable, check if its checkbox is checked before drawing its line
@@ -97,10 +125,29 @@ d3.csv("combined_data.csv", d => {
           .attr("fill", "none")
           .attr("stroke", line.color)
           .attr("stroke-width", 2)
-          .attr("opacity", 0.7) // Added opacity setting
+          .attr("opacity", 0.8)
           .attr("d", d3.line().x(d => x(d.Time)).y(d => y(d[line.key])));
       }
     });
+
+    // Add vertical lines at phase transitions but without text labels
+    svg.append('line')
+      .attr('x1', x(phaseTransitions.restToStand))
+      .attr('x2', x(phaseTransitions.restToStand))
+      .attr('y1', 0)
+      .attr('y2', height)
+      .attr('stroke', '#e74c3c')
+      .attr('stroke-width', 1.5)
+      .attr('stroke-dasharray', '5,5');
+    
+    svg.append('line')
+      .attr('x1', x(phaseTransitions.standToSit))
+      .attr('x2', x(phaseTransitions.standToSit))
+      .attr('y1', 0)
+      .attr('y2', height)
+      .attr('stroke', '#3498db')
+      .attr('stroke-width', 1.5)
+      .attr('stroke-dasharray', '5,5');
 
     // Draw x axis with tick labels in minutes
     svg.append("g")
@@ -113,6 +160,8 @@ d3.csv("combined_data.csv", d => {
       .attr("y", 40)
       .attr("fill", "#000")
       .attr("text-anchor", "middle")
+      .style("font-size", "12px")
+      .style("font-weight", "bold")
       .text("Time (minutes)");
 
     // Draw y axis
@@ -125,6 +174,120 @@ d3.csv("combined_data.csv", d => {
       .attr("fill", "#000")
       .attr("text-anchor", "middle")
       .text("Value");
+
+    // Create a unified legend container positioned further to the right
+    const legendContainer = svg.append('g')
+      .attr('transform', `translate(${width + 20}, 10)`);
+    
+    // Add measurement legend
+    const measurementLegend = legendContainer.append('g');
+    
+    // Add title for measurements
+    measurementLegend.append('text')
+      .attr('x', 0)
+      .attr('y', 0)
+      .style('font-weight', 'bold')
+      .style('font-size', '12px')
+      .text('Measurements:');
+    
+    // Add measurement items to legend
+    lines.forEach((line, i) => {
+      const g = measurementLegend.append('g')
+        .attr('transform', `translate(0, ${i * 20 + 15})`);
+      
+      g.append('line')
+        .attr('x1', 0)
+        .attr('x2', 15)
+        .attr('y1', 0)
+        .attr('y2', 0)
+        .attr('stroke', line.color)
+        .attr('stroke-width', 2);
+      
+      g.append('text')
+        .attr('x', 20)
+        .attr('y', 4)
+        .style('font-size', '11px')
+        .text(line.label);
+    });
+    
+    // Add phase legend below measurement legend
+    const phaseLegend = legendContainer.append('g')
+      .attr('transform', `translate(0, ${lines.length * 20 + 30})`);
+    
+    phaseLegend.append('text')
+      .attr('x', 0)
+      .attr('y', 0)
+      .style('font-weight', 'bold')
+      .style('font-size', '12px')
+      .text('Phases:');
+    
+    // Add phase items to legend
+    phases.forEach((phase, i) => {
+      const g = phaseLegend.append('g')
+        .attr('transform', `translate(0, ${i * 20 + 15})`);
+      
+      g.append('rect')
+        .attr('width', 15)
+        .attr('height', 15)
+        .attr('fill', phase.color)
+        .attr('stroke', '#999')
+        .attr('stroke-width', 0.5);
+      
+      g.append('text')
+        .attr('x', 20)
+        .attr('y', 12)
+        .style('font-size', '11px')
+        .text(phase.name);
+    });
+    
+    // Add transition markers to legend
+    const transitionLegend = legendContainer.append('g')
+      .attr('transform', `translate(0, ${lines.length * 20 + phases.length * 20 + 60})`);
+    
+    transitionLegend.append('text')
+      .attr('x', 0)
+      .attr('y', 0)
+      .style('font-weight', 'bold')
+      .style('font-size', '12px')
+      .text('Transitions:');
+    
+    // Stand Up transition
+    const standUpG = transitionLegend.append('g')
+      .attr('transform', 'translate(0, 15)');
+    
+    standUpG.append('line')
+      .attr('x1', 0)
+      .attr('x2', 15)
+      .attr('y1', 0)
+      .attr('y2', 0)
+      .attr('stroke', '#e74c3c')
+      .attr('stroke-width', 1.5)
+      .attr('stroke-dasharray', '5,5');
+    
+    standUpG.append('text')
+      .attr('x', 20)
+      .attr('y', 4)
+      .style('font-size', '11px')
+      .text('Stand Up');
+    
+    // Sit Down transition
+    const sitDownG = transitionLegend.append('g')
+      .attr('transform', 'translate(0, 35)');
+    
+    sitDownG.append('line')
+      .attr('x1', 0)
+      .attr('x2', 15)
+      .attr('y1', 0)
+      .attr('y2', 0)
+      .attr('stroke', '#3498db')
+      .attr('stroke-width', 1.5)
+      .attr('stroke-dasharray', '5,5');
+    
+    sitDownG.append('text')
+      .attr('x', 20)
+      .attr('y', 4)
+      .style('font-size', '11px')
+      .text('Sit Down');
 
     // Overlay user's resting blood pressure if provided
     if (userBP !== null) {
@@ -144,8 +307,19 @@ d3.csv("combined_data.csv", d => {
         .text("Your Resting BP");
     }
 
-    d3.select("#ts-annotation").text("When you stand, your blood pressure dips and the brain's blood flow begins to compensate—but notice the subtle delay.");
+    d3.select("#ts-annotation").html(`
+      <p><strong>What You're Seeing:</strong> This graph shows how your body responds to standing up and sitting down. 
+      When you stand, notice how blood pressure initially dips, followed by a compensatory increase in brain blood flow. 
+      This brief delay reveals the critical moments when your body works to maintain brain perfusion despite gravity's challenge.</p>
+    `);
   }
+
+
+
+
+
+
+
 
   // --- Phase-Specific Summary Dashboard ---
   // function updatePhaseSummary(subject, phase) {
