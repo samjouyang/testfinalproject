@@ -130,6 +130,68 @@ d3.csv("combined_data.csv", d => {
       }
     });
 
+    // Add tooltip container
+    const tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0)
+      .style("position", "absolute")
+      .style("background-color", "white")
+      .style("border", "1px solid #ddd")
+      .style("border-radius", "3px")
+      .style("padding", "8px")
+      .style("pointer-events", "none")
+      .style("font-size", "12px")
+      .style("box-shadow", "0 2px 4px rgba(0,0,0,0.1)");
+
+    // Add invisible overlay for tooltip interaction
+    const bisect = d3.bisector(d => d.Time).left;
+    
+    svg.append("rect")
+      .attr("width", width)
+      .attr("height", height)
+      .style("fill", "none")
+      .style("pointer-events", "all")
+      .on("mousemove", function(event) {
+        const mouseX = d3.pointer(event)[0];
+        const x0 = x.invert(mouseX);
+        const i = bisect(subjectData, x0, 1);
+        const d0 = subjectData[i - 1];
+        const d1 = subjectData[i] || d0;
+        const d = x0 - d0.Time > d1.Time - x0 ? d1 : d0;
+        
+        // Position the tooltip
+        tooltip
+          .style("opacity", 0.9)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 28) + "px")
+          .html(`
+            <strong>Time:</strong> ${(d.Time / 60).toFixed(1)} min<br>
+            <strong>Phase:</strong> ${d.Phase}<br>
+            ${d3.select("#bp-check").property("checked") ? 
+              `<span style="color: #e74c3c">BP: ${d.Blood_pressure.toFixed(1)} mmHg</span><br>` : ""}
+            ${d3.select("#rbfv-check").property("checked") ? 
+              `<span style="color: #3498db">Right BFV: ${d.right_MCA_BFV.toFixed(1)}</span><br>` : ""}
+            ${d3.select("#lbfv-check").property("checked") ? 
+              `<span style="color: #c842f5">Left BFV: ${d.left_MCA_BFV.toFixed(1)}</span>` : ""}
+          `);
+          
+        // Add a vertical line at mouse position
+        svg.selectAll(".tooltip-line").remove();
+        svg.append("line")
+          .attr("class", "tooltip-line")
+          .attr("x1", mouseX)
+          .attr("x2", mouseX)
+          .attr("y1", 0)
+          .attr("y2", height)
+          .attr("stroke", "#999")
+          .attr("stroke-width", 1)
+          .attr("stroke-dasharray", "3,3");
+      })
+      .on("mouseout", function() {
+        tooltip.style("opacity", 0);
+        svg.selectAll(".tooltip-line").remove();
+      });
+
     // Add vertical lines at phase transitions but without text labels
     svg.append('line')
       .attr('x1', x(phaseTransitions.restToStand))
