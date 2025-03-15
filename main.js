@@ -8,6 +8,32 @@ let userBP = null;
 let userHR = null;
 let currentSubject = null;
 
+// Create a fixed position container for the subject selector
+const fixedSelectorContainer = d3.select("body")
+  .append("div")
+  .attr("id", "fixed-subject-selector")
+  .style("position", "fixed")
+  .style("top", "10px")
+  .style("right", "10px")
+  .style("background-color", "white")
+  .style("padding", "10px")
+  .style("border-radius", "5px")
+  .style("box-shadow", "0 2px 5px rgba(0,0,0,0.2)")
+  .style("z-index", "1000");
+
+// Add a label
+fixedSelectorContainer.append("label")
+  .attr("for", "fixed-select")
+  .text("Participant: ")
+  .style("font-weight", "bold")
+  .style("margin-right", "5px");
+
+// Add the select element
+const fixedSelect = fixedSelectorContainer.append("select")
+  .attr("id", "fixed-select")
+  .style("padding", "3px")
+  .style("border-radius", "3px");
+
 d3.csv("combined_data.csv", d => {
   for (let key in d) {
     if (key !== "Subject" && key !== "Phase" && !key.startsWith("Unnamed")) {
@@ -31,7 +57,7 @@ d3.csv("combined_data.csv", d => {
   const phases = ["Resting", "Preparing", "Standing", "Sitting"];
   currentSubject = subjects[0];
 
-  // Populate subject dropdown
+  // Populate subject dropdown (original one)
   const subjectSelect = d3.select("#subject-select");
   subjectSelect.selectAll("option")
     .data(subjects)
@@ -39,17 +65,40 @@ d3.csv("combined_data.csv", d => {
     .append("option")
     .attr("value", d => d)
     .text(d => `Subject ${d.slice(-2)}`);
+    
+  // Populate the fixed subject dropdown
+  fixedSelect.selectAll("option")
+    .data(subjects)
+    .enter()
+    .append("option")
+    .attr("value", d => d)
+    .text(d => `Subject ${d.slice(-2)}`);
 
-  // Attach event listener for subject selection
+  // Attach event listener for original subject selection
   d3.select("#subject-select").on("change", function () {
     currentSubject = this.value;
+    // Update the fixed selector to match
+    d3.select("#fixed-select").property("value", currentSubject);
+    updateAllVisualizations();
+  });
+  
+  // Attach event listener for fixed subject selection
+  d3.select("#fixed-select").on("change", function () {
+    currentSubject = this.value;
+    // Update the original selector to match
+    d3.select("#subject-select").property("value", currentSubject);
+    updateAllVisualizations();
+  });
+  
+  // Function to update all visualizations
+  function updateAllVisualizations() {
     updateTimeSeries(currentSubject);
     updatePhaseSummary(currentSubject, d3.select(".phase-btn.active").text() === "Rest" ? "Resting" : d3.select(".phase-btn.active").text() === "Stand-Up" ? "Standing" : "Sitting");
     updateCorrelation(currentSubject, d3.select("#var1-select").property("value"), d3.select("#var2-select").property("value"));
     updateOxygenation(currentSubject, +d3.select("#oxygen-slider").property("value"));
     updateAnimatedJourney(currentSubject);
     updateUserProfile();
-  });
+  }
 
   // Handle user profile form submission
   d3.select("#profile-form").on("submit", function(event) {
