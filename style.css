@@ -138,10 +138,96 @@ body {
     margin-right: 5px;
   }
   
+  /* Quiz styling improvements */
+  .quiz-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px 0;
+  }
+  
+  .quiz-question {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .quiz-question h4 {
+    color: #2c3e50;
+    font-size: 1.2em;
+    margin-bottom: 15px;
+  }
+  
+  .quiz-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 15px 0;
+  }
+  
+  .quiz-btn {
+    padding: 12px 20px;
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 2px solid #e9ecef;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1em;
+    font-weight: 500;
+    min-width: 120px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .quiz-btn:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .selected-correct {
+    background-color: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+  }
+  
+  .selected-incorrect {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+  }
+  
+  .quiz-result {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 6px;
+    font-size: 1.05em;
+    line-height: 1.5;
+    transition: all 0.3s ease;
+  }
+  
+  .correct-answer {
+    background-color: #d4edda;
+    border-left: 5px solid #28a745;
+    color: #155724;
+  }
+  
+  .incorrect-answer {
+    background-color: #f8d7da;
+    border-left: 5px solid #dc3545;
+    color: #721c24;
+  }
+  
   @media (max-width: 768px) {
     .container { padding: 10px; }
     h1 { font-size: 2em; }
     h2 { font-size: 1.5em; }
     .controls { flex-direction: column; gap: 10px; }
+    .quiz-options { flex-direction: column; }
+    .quiz-btn { width: 100%; }
   }
   
