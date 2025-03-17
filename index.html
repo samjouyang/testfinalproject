@@ -8,7 +8,48 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-  <div class="container">
+  <!-- Interactive Intro Experience -->
+  <div id="interactive-intro" class="fullscreen-intro">
+    <div class="intro-content">
+      <h1 class="intro-title">Experience Your Body's Response</h1>
+      <div class="intro-step" id="intro-step-1">
+        <p class="intro-text">Ready for a quick experiment?</p>
+        <p class="intro-instruction">First, sit comfortably for 10 seconds...</p>
+        <div class="progress-bar">
+          <div class="progress-fill" id="sit-progress"></div>
+        </div>
+      </div>
+      
+      <div class="intro-step hidden" id="intro-step-2">
+        <p class="intro-text">Now, stand up as quickly as possible!</p>
+        <div class="stand-animation">
+          <div class="figure sit"></div>
+          <div class="figure stand"></div>
+          <div class="arrow"></div>
+        </div>
+      </div>
+      
+      <div class="intro-step hidden" id="intro-step-3">
+        <p class="intro-text">What did you notice?</p>
+        <p class="intro-instruction">Did you feel:</p>
+        <ul class="sensation-list">
+          <li>A brief lightheadedness?</li>
+          <li>Slight dizziness?</li>
+          <li>Vision changes?</li>
+          <li>Nothing unusual?</li>
+        </ul>
+        <p class="intro-instruction">This is your body responding to gravity's challenge.</p>
+      </div>
+      
+      <div class="intro-step hidden" id="intro-step-4">
+        <p class="intro-text">You just experienced what we're about to explore.</p>
+        <p class="intro-instruction">Let's discover what happened inside your body during those few seconds...</p>
+        <button id="begin-exploration" class="pulse-button">Begin Exploration</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="main-content">
     <!-- Header with Hook -->
     <header>
       <h1>Standing Up: Uncovering Your Body's Hidden Resilience</h1>

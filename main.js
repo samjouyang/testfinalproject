@@ -882,3 +882,105 @@ d3.select("head").append("style").html(`
     color: #721c24;
   }
 `);
+
+// Interactive Intro Experience
+document.addEventListener('DOMContentLoaded', function() {
+  const step1 = document.getElementById('intro-step-1');
+  const step2 = document.getElementById('intro-step-2');
+  const step3 = document.getElementById('intro-step-3');
+  const step4 = document.getElementById('intro-step-4');
+  const sitProgress = document.getElementById('sit-progress');
+  const beginButton = document.getElementById('begin-exploration');
+  const introSection = document.getElementById('interactive-intro');
+  const mainContent = document.getElementById('main-content');
+  
+  // Hide main content initially
+  mainContent.style.opacity = '0';
+  
+  // Start with step 1 - sitting countdown
+  let progress = 0;
+  const sitTimer = setInterval(() => {
+    progress += 1;
+    sitProgress.style.width = `${progress}%`;
+    
+    if (progress >= 100) {
+      clearInterval(sitTimer);
+      
+      // Transition to step 2
+      step1.classList.add('hidden');
+      setTimeout(() => {
+        step1.style.display = 'none';
+        step2.style.display = 'block';
+        
+        setTimeout(() => {
+          step2.classList.remove('hidden');
+          
+          // Animate the standing up
+          setTimeout(() => {
+            const sitFigure = document.querySelector('.figure.sit');
+            const standFigure = document.querySelector('.figure.stand');
+            const arrow = document.querySelector('.arrow');
+            
+            sitFigure.style.opacity = '0';
+            standFigure.style.opacity = '1';
+            arrow.style.opacity = '1';
+            
+            // Transition to step 3 after standing animation
+            setTimeout(() => {
+              step2.classList.add('hidden');
+              setTimeout(() => {
+                step2.style.display = 'none';
+                step3.style.display = 'block';
+                
+                setTimeout(() => {
+                  step3.classList.remove('hidden');
+                  
+                  // Transition to step 4 after a few seconds
+                  setTimeout(() => {
+                    step3.classList.add('hidden');
+                    setTimeout(() => {
+                      step3.style.display = 'none';
+                      step4.style.display = 'block';
+                      
+                      setTimeout(() => {
+                        step4.classList.remove('hidden');
+                      }, 100);
+                    }, 800);
+                  }, 5000);
+                }, 100);
+              }, 800);
+            }, 2000);
+          }, 1000);
+        }, 100);
+      }, 800);
+    }
+  }, 100); // 10 seconds total (100 * 100ms)
+  
+  // Begin exploration button
+  beginButton.addEventListener('click', function() {
+    // Fade out intro
+    introSection.style.opacity = '0';
+    
+    // Fade in main content
+    setTimeout(() => {
+      introSection.style.display = 'none';
+      mainContent.style.opacity = '1';
+      
+      // Trigger any initialization needed for your visualizations
+      window.dispatchEvent(new Event('resize')); // Helps D3 visualizations render correctly
+    }, 1000);
+  });
+  
+  // Allow skipping the intro with ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && introSection.style.display !== 'none') {
+      clearInterval(sitTimer);
+      introSection.style.opacity = '0';
+      setTimeout(() => {
+        introSection.style.display = 'none';
+        mainContent.style.opacity = '1';
+        window.dispatchEvent(new Event('resize'));
+      }, 500);
+    }
+  });
+});

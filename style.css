@@ -231,3 +231,179 @@ body {
     .quiz-btn { width: 100%; }
   }
   
+  /* Interactive Intro Experience */
+  .fullscreen-intro {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: #2c3e50;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    overflow: hidden;
+    transition: opacity 1s ease;
+  }
+  
+  .intro-content {
+    max-width: 800px;
+    text-align: center;
+    padding: 2rem;
+  }
+  
+  .intro-title {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  
+  .intro-text {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .intro-instruction {
+    font-size: 1.4rem;
+    color: #3498db;
+    margin-bottom: 1.5rem;
+  }
+  
+  .intro-step {
+    transition: opacity 0.8s ease;
+  }
+  
+  .hidden {
+    opacity: 0;
+    display: none;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 5px;
+    margin: 2rem auto;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background-color: #3498db;
+    transition: width 0.1s linear;
+  }
+  
+  .stand-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    margin: 2rem 0;
+    position: relative;
+  }
+  
+  .figure {
+    width: 50px;
+    height: 100px;
+    background-color: white;
+    border-radius: 50px;
+    position: relative;
+    transition: opacity 0.5s ease;
+  }
+  
+  .figure:before {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-color: white;
+    border-radius: 50%;
+    top: -20px;
+    left: 10px;
+  }
+  
+  .figure.sit {
+    height: 70px;
+    transform: translateY(30px);
+  }
+  
+  .figure.stand {
+    opacity: 0;
+    position: absolute;
+  }
+  
+  .arrow {
+    width: 80px;
+    height: 40px;
+    border-top: 5px solid #3498db;
+    border-right: 5px solid #3498db;
+    transform: rotate(-45deg);
+    position: absolute;
+    top: 50px;
+    right: 280px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  
+  .sensation-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+  
+  .sensation-list li {
+    display: inline-block;
+    margin: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .sensation-list li:hover {
+    background-color: rgba(52, 152, 219, 0.5);
+    transform: scale(1.05);
+  }
+  
+  .pulse-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 2rem;
+    animation: pulse 2s infinite;
+    transition: all 0.3s ease;
+  }
+  
+  .pulse-button:hover {
+    background-color: #c0392b;
+    animation: none;
+    transform: scale(1.05);
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 15px rgba(231, 76, 60, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+  }
+  
+  #main-content {
+    opacity: 1;
+    transition: opacity 1s ease;
+  }
+  
