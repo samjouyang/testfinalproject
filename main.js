@@ -674,66 +674,6 @@ d3.csv("combined_data.csv", d => {
   setupScrollytelling();
 });
 
-// Add some CSS for the quiz
-d3.select("head").append("style").html(`
-  .quiz-section {
-    margin: 20px 0;
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-  }
-  .quiz-question {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  .quiz-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 15px 0;
-  }
-  .quiz-btn {
-    padding: 10px 20px;
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 14px;
-  }
-  .quiz-btn:hover {
-    background-color: #e0e0e0;
-  }
-  .quiz-result {
-    margin-top: 15px;
-    padding: 12px;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 500;
-    background-color: #f8f9fa;
-    border-left: 4px solid #ddd;
-  }
-  .selected-correct {
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-  }
-  .selected-incorrect {
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-  }
-  .correct-answer {
-    background-color: #d4edda;
-    border-left-color: #28a745;
-    color: #155724;
-  }
-  .incorrect-answer {
-    background-color: #f8d7da;
-    border-left-color: #dc3545;
-    color: #721c24;
-  }
-`);
-
 // Interactive Intro Experience
 document.addEventListener('DOMContentLoaded', function() {
   const steps = {
