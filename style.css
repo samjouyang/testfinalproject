@@ -297,22 +297,23 @@ body {
     transition: width 0.1s linear;
   }
   
+  /* Improved stand animation styling */
   .stand-animation {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 150px;
+    height: 180px;
     margin: 2rem 0;
     position: relative;
   }
   
   .figure {
-    width: 50px;
+    width: 40px;
     height: 100px;
-    background-color: white;
-    border-radius: 50px;
+    background-color: #3498db;
+    border-radius: 20px;
     position: relative;
-    transition: opacity 0.5s ease;
+    transition: all 0.8s ease;
   }
   
   .figure:before {
@@ -320,33 +321,60 @@ body {
     position: absolute;
     width: 30px;
     height: 30px;
-    background-color: white;
+    background-color: #3498db;
     border-radius: 50%;
     top: -20px;
-    left: 10px;
+    left: 5px;
+    transition: all 0.8s ease;
+  }
+  
+  /* Arms for the figure */
+  .figure:after {
+    content: "";
+    position: absolute;
+    width: 60px;
+    height: 10px;
+    background-color: #3498db;
+    border-radius: 5px;
+    top: 15px;
+    left: -10px;
+    transition: all 0.8s ease;
   }
   
   .figure.sit {
-    height: 70px;
-    transform: translateY(30px);
+    height: 60px;
+    transform: translateY(40px);
+    background-color: #2980b9;
+  }
+  
+  .figure.sit:after {
+    transform: rotate(30deg);
+    width: 40px;
+    left: 0;
   }
   
   .figure.stand {
     opacity: 0;
     position: absolute;
+    height: 100px;
+    transform: translateY(0);
+  }
+  
+  .figure.stand:after {
+    transform: rotate(0deg);
   }
   
   .arrow {
-    width: 80px;
-    height: 40px;
-    border-top: 5px solid #3498db;
-    border-right: 5px solid #3498db;
+    width: 60px;
+    height: 30px;
+    border-top: 4px solid #e74c3c;
+    border-right: 4px solid #e74c3c;
     transform: rotate(-45deg);
     position: absolute;
-    top: 50px;
-    right: 280px;
+    top: 60px;
+    right: 35%;
     opacity: 0;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.5s ease, transform 0.8s ease;
   }
   
   .sensation-list {
@@ -405,5 +433,37 @@ body {
   #main-content {
     opacity: 1;
     transition: opacity 1s ease;
+  }
+  
+  .chair {
+    position: absolute;
+    width: 60px;
+    height: 15px;
+    background-color: #95a5a6;
+    border-radius: 5px;
+    bottom: 40px;
+    z-index: -1;
+  }
+  
+  .chair:after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 30px;
+    background-color: #7f8c8d;
+    border-radius: 5px;
+    bottom: -30px;
+    left: 10px;
+  }
+  
+  .chair:before {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 30px;
+    background-color: #7f8c8d;
+    border-radius: 5px;
+    bottom: -30px;
+    right: 10px;
   }
   

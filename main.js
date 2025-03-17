@@ -885,116 +885,100 @@ d3.select("head").append("style").html(`
 
 // Interactive Intro Experience
 document.addEventListener('DOMContentLoaded', function() {
-  const step0 = document.getElementById('intro-step-0');
-  const step1 = document.getElementById('intro-step-1');
-  const step2 = document.getElementById('intro-step-2');
-  const step3 = document.getElementById('intro-step-3');
-  const step4 = document.getElementById('intro-step-4');
-  const sitProgress = document.getElementById('sit-progress');
-  const startButton = document.getElementById('start-experiment');
-  const beginButton = document.getElementById('begin-exploration');
-  const introSection = document.getElementById('interactive-intro');
-  const mainContent = document.getElementById('main-content');
+  const steps = {
+    0: document.getElementById('intro-step-0'),
+    1: document.getElementById('intro-step-1'),
+    2: document.getElementById('intro-step-2'),
+    3: document.getElementById('intro-step-3'),
+    4: document.getElementById('intro-step-4')
+  };
+  
+  const elements = {
+    sitProgress: document.getElementById('sit-progress'),
+    startButton: document.getElementById('start-experiment'),
+    beginButton: document.getElementById('begin-exploration'),
+    introSection: document.getElementById('interactive-intro'),
+    mainContent: document.getElementById('main-content')
+  };
   
   // Hide main content initially
-  mainContent.style.opacity = '0';
+  elements.mainContent.style.opacity = '0';
   
-  // Start button event listener
-  startButton.addEventListener('click', function() {
-    // Transition from step 0 to step 1
-    step0.classList.add('hidden');
+  // Helper function to transition between steps
+  function transitionToStep(fromStep, toStep, delay = 800) {
+    steps[fromStep].classList.add('hidden');
     setTimeout(() => {
-      step0.style.display = 'none';
-      step1.style.display = 'block';
+      steps[fromStep].style.display = 'none';
+      steps[toStep].style.display = 'block';
       
       setTimeout(() => {
-        step1.classList.remove('hidden');
-        
-        // Start the sitting countdown
-        let progress = 0;
-        const sitTimer = setInterval(() => {
-          progress += 1;
-          sitProgress.style.width = `${progress}%`;
-          
-          if (progress >= 100) {
-            clearInterval(sitTimer);
-            
-            // Transition to step 2
-            step1.classList.add('hidden');
-            setTimeout(() => {
-              step1.style.display = 'none';
-              step2.style.display = 'block';
-              
-              // Rest of the existing animation sequence continues...
-              setTimeout(() => {
-                step2.classList.remove('hidden');
-                
-                // Animate the standing up
-                setTimeout(() => {
-                  const sitFigure = document.querySelector('.figure.sit');
-                  const standFigure = document.querySelector('.figure.stand');
-                  const arrow = document.querySelector('.arrow');
-                  
-                  sitFigure.style.opacity = '0';
-                  standFigure.style.opacity = '1';
-                  arrow.style.opacity = '1';
-                  
-                  // Transition to step 3 after standing animation
-                  setTimeout(() => {
-                    step2.classList.add('hidden');
-                    setTimeout(() => {
-                      step2.style.display = 'none';
-                      step3.style.display = 'block';
-                      
-                      setTimeout(() => {
-                        step3.classList.remove('hidden');
-                        
-                        // Transition to step 4 after a few seconds
-                        setTimeout(() => {
-                          step3.classList.add('hidden');
-                          setTimeout(() => {
-                            step3.style.display = 'none';
-                            step4.style.display = 'block';
-                            
-                            setTimeout(() => {
-                              step4.classList.remove('hidden');
-                            }, 100);
-                          }, 800);
-                        }, 5000);
-                      }, 100);
-                    }, 800);
-                  }, 2000);
-                }, 1000);
-              }, 100);
-            }, 800);
-          }
-        }, 100); // 10 seconds total (100 * 100ms)
+        steps[toStep].classList.remove('hidden');
       }, 100);
-    }, 800);
+    }, delay);
+  }
+  
+  // Start button event listener
+  elements.startButton.addEventListener('click', function() {
+    transitionToStep(0, 1);
+    
+    // Start the sitting countdown
+    let progress = 0;
+    const sitTimer = setInterval(() => {
+      progress += 1;
+      elements.sitProgress.style.width = `${progress}%`;
+      
+      if (progress >= 100) {
+        clearInterval(sitTimer);
+        transitionToStep(1, 2);
+        
+        // Animate standing up after a delay
+        setTimeout(() => {
+          const sitFigure = document.querySelector('.figure.sit');
+          const standFigure = document.querySelector('.figure.stand');
+          const arrow = document.querySelector('.arrow');
+          
+          // First show the arrow
+          arrow.style.opacity = '1';
+          
+          // Then animate the standing figure
+          setTimeout(() => {
+            sitFigure.style.opacity = '0';
+            standFigure.style.opacity = '1';
+            
+            // Move to next step after animation completes
+            setTimeout(() => {
+              transitionToStep(2, 3);
+              
+              // Move to final step after a few seconds
+              setTimeout(() => {
+                transitionToStep(3, 4);
+              }, 5000);
+            }, 2000);
+          }, 500);
+        }, 1000);
+      }
+    }, 100); // 10 seconds total
   });
   
-  // Begin exploration button (existing code)
-  beginButton.addEventListener('click', function() {
-    // Fade out intro
-    introSection.style.opacity = '0';
+  // Begin exploration button
+  elements.beginButton.addEventListener('click', function() {
+    // Fade out intro and show main content
+    elements.introSection.style.opacity = '0';
     
-    // Fade in main content
     setTimeout(() => {
-      introSection.style.display = 'none';
-      mainContent.style.opacity = '1';
-      
-      // Trigger any initialization needed for your visualizations
-      window.dispatchEvent(new Event('resize')); // Helps D3 visualizations render correctly
+      elements.introSection.style.display = 'none';
+      elements.mainContent.style.opacity = '1';
+      window.dispatchEvent(new Event('resize'));
     }, 1000);
   });
   
-  // Allow skipping the intro with ESC key (existing code)
+  // Allow skipping with ESC key
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && introSection.style.display !== 'none') {
-      introSection.style.opacity = '0';
+    if (e.key === 'Escape' && elements.introSection.style.display !== 'none') {
+      elements.introSection.style.opacity = '0';
       setTimeout(() => {
-        introSection.style.display = 'none';
-        mainContent.style.opacity = '1';
+        elements.introSection.style.display = 'none';
+        elements.mainContent.style.opacity = '1';
         window.dispatchEvent(new Event('resize'));
       }, 500);
     }
