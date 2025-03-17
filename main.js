@@ -95,8 +95,6 @@ d3.csv("combined_data.csv", d => {
     updateTimeSeries(currentSubject);
     updatePhaseSummary(currentSubject, d3.select(".phase-btn.active").text() === "Rest" ? "Resting" : d3.select(".phase-btn.active").text() === "Stand-Up" ? "Standing" : "Sitting");
     updateCorrelation(currentSubject, d3.select("#var1-select").property("value"), d3.select("#var2-select").property("value"));
-    updateOxygenation(currentSubject, +d3.select("#oxygen-slider").property("value"));
-    updateAnimatedJourney(currentSubject);
     updateUserProfile();
   }
 
@@ -508,84 +506,7 @@ d3.csv("combined_data.csv", d => {
       .text(var2);
   }
 
-  // --- Brain Oxygenation Heatmap ---
-  function updateOxygenation(subject, timeIndex) {
-    const svg = d3.select("#brainOxygenationChart").html("")
-      .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const subjectData = data.filter(d => d.Subject === subject).sort((a, b) => a.Time - b.Time);
-    const oxyData = subjectData.map(d => ({ Time: d.Time, Oxy: (d.i1_850 + d.i1_805) / 2 }));
-    const maxIndex = Math.min(timeIndex, oxyData.length - 1);
-
-    const x = d3.scaleLinear().domain(d3.extent(oxyData, d => d.Time)).range([0, width]);
-    const y = d3.scaleLinear().domain(d3.extent(oxyData, d => d.Oxy)).range([height, 0]);
-
-    svg.append("path")
-      .datum(oxyData)
-      .attr("fill", "none")
-      .attr("stroke", "#2ecc71")
-      .attr("stroke-width", 2)
-      .attr("d", d3.line().x(d => x(d.Time)).y(d => y(d.Oxy)));
-
-    svg.append("circle")
-      .attr("cx", x(oxyData[maxIndex].Time))
-      .attr("cy", y(oxyData[maxIndex].Oxy))
-      .attr("r", 5)
-      .attr("fill", "#e74c3c");
-
-    svg.append("g")
-      .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x).tickFormat(d => d / 60));
-    svg.append("g").call(d3.axisLeft(y));
-  }
-
-  // --- Animated Physiological Journey ---
-  let animationInterval;
-  function updateAnimatedJourney(subject) {
-    const svg = d3.select("#animatedJourneyChart").html("")
-      .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    const subjectData = data.filter(d => d.Subject === subject).sort((a, b) => a.Time - b.Time);
-    const x = d3.scaleLinear().domain(d3.extent(subjectData, d => d.Time)).range([0, width]);
-    const y = d3.scaleLinear().domain(d3.extent(subjectData, d => d.Blood_pressure)).range([height, 0]);
-
-    svg.append("path")
-      .datum(subjectData)
-      .attr("fill", "none")
-      .attr("stroke", "#e74c3c")
-      .attr("stroke-width", 2)
-      .attr("d", d3.line().x(d => x(d.Time)).y(d => y(d.Blood_pressure)));
-
-    const cursor = svg.append("circle")
-      .attr("r", 5)
-      .attr("fill", "#3498db");
-
-    let i = 0;
-    function animate() {
-      cursor.attr("cx", x(subjectData[i].Time))
-        .attr("cy", y(subjectData[i].Blood_pressure));
-      d3.select("#journey-text").text(
-        `At ${(subjectData[i].Time / 60).toFixed(1)} min: BP = ${subjectData[i].Blood_pressure.toFixed(1)} mmHg, Phase: ${subjectData[i].Phase} – And your body initiates its response, but note the brief lag.`
-      );
-      i = (i + 1) % subjectData.length;
-    }
-
-    d3.select("#play-btn").on("click", () => { 
-      if (!animationInterval) animationInterval = setInterval(animate, 50); 
-    });
-    d3.select("#pause-btn").on("click", () => { 
-      clearInterval(animationInterval); 
-      animationInterval = null; 
-    });
-  }
 
   // --- Your Personal Profile ---
   function updateUserProfile() {
@@ -661,18 +582,16 @@ d3.csv("combined_data.csv", d => {
   d3.select("#var1-select").on("change", () => updateCorrelation(currentSubject, d3.select("#var1-select").property("value"), d3.select("#var2-select").property("value")));
   d3.select("#var2-select").on("change", () => updateCorrelation(currentSubject, d3.select("#var1-select").property("value"), d3.select("#var2-select").property("value")));
 
-  d3.select("#oxygen-slider").attr("max", data.filter(d => d.Subject === currentSubject).length - 1)
-    .on("input", () => updateOxygenation(currentSubject, +d3.select("#oxygen-slider").property("value")));
+
 
   // Initialize visualizations
   updateTimeSeries(currentSubject);
   updatePhaseSummary(currentSubject, "Resting");
   updateCorrelation(currentSubject, "Blood_pressure", "right_MCA_BFV");
-  updateOxygenation(currentSubject, 0);
-  updateAnimatedJourney(currentSubject);
   setupQuiz();
   setupScrollytelling();
 });
+
 
 // Interactive Intro Experience
 document.addEventListener('DOMContentLoaded', function() {
