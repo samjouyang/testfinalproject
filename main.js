@@ -21,28 +21,47 @@ const fixedSelectorContainer = d3.select("body")
   .style("box-shadow", "0 2px 5px rgba(0,0,0,0.2)")
   .style("z-index", "1000");
 
-// Add a label
 fixedSelectorContainer.append("label")
   .attr("for", "fixed-select")
   .text("Participant: ")
   .style("font-weight", "bold")
   .style("margin-right", "5px");
 
-// Add the select element
 const fixedSelect = fixedSelectorContainer.append("select")
   .attr("id", "fixed-select")
   .style("padding", "3px")
   .style("border-radius", "3px");
 
+// Helper function: Compute linear regression and correlation coefficient
+function computeRegression(data, xKey, yKey) {
+  const n = data.length;
+  const sumX = d3.sum(data, d => d[xKey]);
+  const sumY = d3.sum(data, d => d[yKey]);
+  const meanX = sumX / n;
+  const meanY = sumY / n;
+  
+  let numerator = 0, denomX = 0, denomY = 0;
+  data.forEach(d => {
+    const dx = d[xKey] - meanX;
+    const dy = d[yKey] - meanY;
+    numerator += dx * dy;
+    denomX += dx * dx;
+    denomY += dy * dy;
+  });
+  const slope = numerator / denomX;
+  const intercept = meanY - slope * meanX;
+  const r = numerator / Math.sqrt(denomX * denomY);
+  return { slope, intercept, r };
+}
+
 d3.csv("combined_data.csv", d => {
   for (let key in d) {
     if (key !== "Subject" && key !== "Phase" && !key.startsWith("Unnamed")) {
-      d[key] = +d[key]; // Convert numeric values
+      d[key] = +d[key];
     }
   }
   return d;
 }).then(data => {
-  // Remove any Unnamed columns
   data = data.map(d => {
     const cleaned = {};
     for (let key in d) {
@@ -51,46 +70,49 @@ d3.csv("combined_data.csv", d => {
     return cleaned;
   });
 
-  // Extract unique subjects and measurements
   const subjects = [...new Set(data.map(d => d.Subject))];
   const measurements = ["Blood_pressure", "right_MCA_BFV", "left_MCA_BFV", "resp_uncalibrated"];
-  const phases = ["Resting", "Preparing", "Standing", "Sitting"];
   currentSubject = subjects[0];
 
-  // Populate subject dropdown (original one)
   const subjectSelect = d3.select("#subject-select");
-  subjectSelect.selectAll("option")
-    .data(subjects)
-    .enter()
-    .append("option")
-    .attr("value", d => d)
-    .text(d => `Subject ${d.slice(-2)}`);
-    
-  // Populate the fixed subject dropdown
-  fixedSelect.selectAll("option")
-    .data(subjects)
-    .enter()
-    .append("option")
-    .attr("value", d => d)
-    .text(d => `Subject ${d.slice(-2)}`);
+  // Filter out any subjects that don't have digits in their ID
+  const validSubjects = subjects.filter(d => /\d+/.test(d));
 
-  // Attach event listener for original subject selection
+  subjectSelect.selectAll("option")
+    .data(validSubjects)
+    .enter()
+    .append("option")
+    .attr("value", d => d)
+    .text(d => {
+      const match = d.match(/\d+/);
+      const numeric = parseInt(match[0], 10);
+      return `Subject ${numeric}`;
+    });
+
+  // Use only validSubjects for the fixed select as well
+  fixedSelect.selectAll("option")
+    .data(validSubjects)
+    .enter()
+    .append("option")
+    .attr("value", d => d)
+    .text(d => {
+      const match = d.match(/\d+/);
+      const numeric = parseInt(match[0], 10);
+      return `Subject ${numeric}`;
+    });
+
   d3.select("#subject-select").on("change", function () {
     currentSubject = this.value;
-    // Update the fixed selector to match
     d3.select("#fixed-select").property("value", currentSubject);
     updateAllVisualizations();
   });
   
-  // Attach event listener for fixed subject selection
   d3.select("#fixed-select").on("change", function () {
     currentSubject = this.value;
-    // Update the original selector to match
     d3.select("#subject-select").property("value", currentSubject);
     updateAllVisualizations();
   });
   
-  // Function to update all visualizations
   function updateAllVisualizations() {
     updateTimeSeries(currentSubject);
     updatePhaseSummary(currentSubject, d3.select(".phase-btn.active").text() === "Rest" ? "Resting" : d3.select(".phase-btn.active").text() === "Stand-Up" ? "Standing" : "Sitting");
@@ -98,7 +120,6 @@ d3.csv("combined_data.csv", d => {
     updateUserProfile();
   }
 
-  // Handle user profile form submission
   d3.select("#profile-form").on("submit", function(event) {
     event.preventDefault();
     userBP = +d3.select("#user-bp").property("value");
@@ -106,8 +127,6 @@ d3.csv("combined_data.csv", d => {
     updateUserProfile();
     updateTimeSeries(currentSubject);
   });
-
-
 
   function updateTimeSeries(subject) {
     const svg = d3.select("#timeSeriesChart").html("")
@@ -424,8 +443,6 @@ d3.csv("combined_data.csv", d => {
   }
 
 
-
-
   function updatePhaseSummary(subject, phase) {
     const svg = d3.select("#phaseSummaryChart").html("")
       .append("svg")
@@ -463,6 +480,7 @@ d3.csv("combined_data.csv", d => {
     svg.append("g").call(d3.axisLeft(yScale));
 }
 
+
   // --- Correlation Explorer ---
   function updateCorrelation(subject, var1, var2) {
     const svg = d3.select("#correlationChart").html("")
@@ -485,6 +503,27 @@ d3.csv("combined_data.csv", d => {
       .attr("r", 3)
       .attr("fill", "#e74c3c");
 
+    // Compute regression and add trend line
+    const { slope, intercept, r } = computeRegression(subjectData, var1, var2);
+    const xRange = d3.extent(subjectData, d => d[var1]);
+    svg.append("line")
+      .attr("x1", x(xRange[0]))
+      .attr("x2", x(xRange[1]))
+      .attr("y1", y(intercept + slope * xRange[0]))
+      .attr("y2", y(intercept + slope * xRange[1]))
+      .attr("stroke", "black")
+      .attr("stroke-width", 1.5)
+      .attr("stroke-dasharray", "4,4");
+
+    // Add correlation coefficient text on the chart
+    svg.append("text")
+      .attr("x", width - 100)
+      .attr("y", 20)
+      .attr("fill", "#333")
+      .style("font-size", "14px")
+      .style("font-weight", "bold")
+      .text(`r = ${r.toFixed(2)}`);
+
     svg.append("g")
       .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(x))
@@ -505,8 +544,6 @@ d3.csv("combined_data.csv", d => {
       .attr("text-anchor", "middle")
       .text(var2);
   }
-
-
 
   // --- Your Personal Profile ---
   function updateUserProfile() {
@@ -548,9 +585,14 @@ d3.csv("combined_data.csv", d => {
       .attr("x", d => x(d.label) + x.bandwidth() / 2)
       .attr("y", d => yScale(d.value) - 5)
       .attr("text-anchor", "middle")
-      .text(d => d.value.toFixed(1) + " mmHg");
-  }
+      .text(d => d.value ? d.value.toFixed(1) + " mmHg" : "N/A");
 
+    // Display personalized insight (percentile ranking)
+    const bpValues = subjectData.map(d => d.Blood_pressure);
+    const rank = bpValues.filter(v => userBP && (v < userBP)).length;
+    const percentile = userBP ? ((rank / bpValues.length) * 100).toFixed(1) : "N/A";
+    d3.select("#profile-feedback").html(userBP ? `<p>Your resting BP is in the ${percentile} percentile of the dataset.</p>` : "");
+  }
 
   // --- Scrollytelling ---
   function setupScrollytelling() {
@@ -566,23 +608,18 @@ d3.csv("combined_data.csv", d => {
     });
   }
 
-  // Attach event listeners for the four checkboxes explicitly
+  // Attach event listeners for checkboxes and variable selectors
   d3.select("#bp-check").on("change", () => updateTimeSeries(currentSubject));
   d3.select("#rbfv-check").on("change", () => updateTimeSeries(currentSubject));
   d3.select("#lbfv-check").on("change", () => updateTimeSeries(currentSubject));
-  d3.select("#resp-check").on("change", () => updateTimeSeries(currentSubject));
+  d3.select("#var1-select").on("change", () => updateCorrelation(currentSubject, d3.select("#var1-select").property("value"), d3.select("#var2-select").property("value")));
+  d3.select("#var2-select").on("change", () => updateCorrelation(currentSubject, d3.select("#var1-select").property("value"), d3.select("#var2-select").property("value")));
 
-  // Listeners for other interactive elements
   d3.selectAll(".phase-btn").on("click", function() {
     d3.selectAll(".phase-btn").classed("active", false);
     d3.select(this).classed("active", true);
     updatePhaseSummary(currentSubject, this.textContent === "Rest" ? "Resting" : this.textContent === "Stand-Up" ? "Standing" : "Sitting");
   });
-
-  d3.select("#var1-select").on("change", () => updateCorrelation(currentSubject, d3.select("#var1-select").property("value"), d3.select("#var2-select").property("value")));
-  d3.select("#var2-select").on("change", () => updateCorrelation(currentSubject, d3.select("#var1-select").property("value"), d3.select("#var2-select").property("value")));
-
-
 
   // Initialize visualizations
   updateTimeSeries(currentSubject);
@@ -592,8 +629,146 @@ d3.csv("combined_data.csv", d => {
   setupScrollytelling();
 });
 
+// =============================
+// New Interactive Human Body Visualization Features
+// =============================
 
-// Interactive Intro Experience
+// Function to update the human body visualization based on time (in seconds)
+function updateBodyVisualization(time) {
+  // Update displayed time in the slider info
+  const sliderTimeElem = document.getElementById("sliderTime");
+  if (sliderTimeElem) {
+    sliderTimeElem.textContent = time;
+  }
+  
+  // Define phase thresholds (in seconds):
+  // Rest: 0 - 600 sec (0-10 min)
+  // Stand: 600 - 1200 sec (10-20 min)
+  // Sit: 1200 - 1800 sec (20-30 min)
+  const restPhase = 600;
+  const standPhase = 1200;
+
+  let heartRate, bloodPressure, brainFlow, brainColor, figureTranslation;
+
+  if (time <= restPhase) {
+    // Rest phase
+    heartRate = 70;
+    bloodPressure = "120/80";
+    brainFlow = 100;
+    brainColor = "#3498db"; // blue
+    figureTranslation = 0;
+  } else if (time <= standPhase) {
+    // Standing phase: elevated heart rate and brain flow, slight BP dip
+    heartRate = 85;
+    bloodPressure = "115/75";
+    brainFlow = 110;
+    brainColor = "#ff9800"; // orange-ish indicating activation
+    // Interpolate upward movement: at time=600, 0px; at time=1200, -20px
+    figureTranslation = -20 * ((time - restPhase) / (standPhase - restPhase));
+  } else {
+    // Sitting phase: recovery
+    heartRate = 75;
+    bloodPressure = "120/80";
+    brainFlow = 100;
+    brainColor = "#3498db"; // back to blue
+    // Interpolate back down: at time=1200, -20px; at time=1800, 0px
+    figureTranslation = -20 + 20 * ((time - standPhase) / (1800 - standPhase));
+  }
+
+  // Update the displayed internal numbers
+  const heartRateElem = document.getElementById("heartRate");
+  if (heartRateElem) heartRateElem.textContent = heartRate;
+  const bloodPressureElem = document.getElementById("bloodPressure");
+  if (bloodPressureElem) bloodPressureElem.textContent = bloodPressure;
+  const brainFlowElem = document.getElementById("brainFlow");
+  if (brainFlowElem) brainFlowElem.textContent = brainFlow;
+
+  // Update the brain color in the SVG
+  const brainElem = document.getElementById("brain");
+  if (brainElem) {
+    brainElem.setAttribute("fill", brainColor);
+  }
+
+  // Update the overall figure position (simulate slight movement)
+  const humanSVG = document.getElementById("humanSVG");
+  if (humanSVG) {
+    humanSVG.style.transform = `translateY(${figureTranslation}px)`;
+  }
+}
+
+// Setup the time slider interaction
+document.addEventListener('DOMContentLoaded', function() {
+  const timeSlider = document.getElementById("timeSlider");
+  if (timeSlider) {
+    // When the user moves the slider, update the visualization
+    timeSlider.addEventListener("input", function() {
+      const currentTime = +this.value; // slider value in seconds
+      updateBodyVisualization(currentTime);
+    });
+  }
+  
+  // OPTIONAL: Automatic progression (uncomment to enable)
+  /*
+  let autoProgress = true;
+  let currentTime = 0;
+  const totalTime = 1800; // 30 minutes in seconds
+  const interval = 1000; // update every second
+
+  setInterval(() => {
+    if (autoProgress && timeSlider) {
+      currentTime = (currentTime + 1) % (totalTime + 1);
+      timeSlider.value = currentTime;
+      updateBodyVisualization(currentTime);
+    }
+  }, interval);
+
+  // If user interacts with the slider, disable auto progression:
+  timeSlider.addEventListener("input", function() {
+    autoProgress = false;
+  });
+  */
+});
+
+// Add clickable interactivity to the heart element
+document.addEventListener('DOMContentLoaded', function() {
+  const heartElem = document.getElementById("heart");
+  if (heartElem) {
+    heartElem.addEventListener("click", function() {
+      // Create a modal to display detailed heart information
+      let modal = document.createElement("div");
+      modal.id = "detailModal";
+      // Basic modal styling; you may want to move this to your CSS file for better organization
+      modal.style.position = "fixed";
+      modal.style.top = "50%";
+      modal.style.left = "50%";
+      modal.style.transform = "translate(-50%, -50%)";
+      modal.style.background = "#fff";
+      modal.style.border = "1px solid #ddd";
+      modal.style.padding = "20px";
+      modal.style.boxShadow = "0 2px 5px rgba(0,0,0,0.3)";
+      modal.style.zIndex = 2000;
+      modal.innerHTML = `
+        <h3>Heart Details</h3>
+        <p>Current Heart Rate: ${document.getElementById("heartRate") ? document.getElementById("heartRate").textContent : 'N/A'} bpm</p>
+        <p>Heart Rate Variability: 5%</p>
+        <button id="closeModal">Close</button>
+      `;
+      document.body.appendChild(modal);
+
+      // Close button handler
+      document.getElementById("closeModal").addEventListener("click", function() {
+        modal.remove();
+      });
+    });
+  }
+});
+
+// =============================
+// End New Interactive Human Body Visualization Features
+// =============================
+
+
+// --- Interactive Intro Experience ---
 document.addEventListener('DOMContentLoaded', function() {
   const steps = {
     0: document.getElementById('intro-step-0'),
@@ -614,46 +789,34 @@ document.addEventListener('DOMContentLoaded', function() {
   // Hide main content initially
   elements.mainContent.style.opacity = '0';
   
-  // Helper function to transition between steps
   function transitionToStep(fromStep, toStep, delay = 800) {
     steps[fromStep].classList.add('hidden');
     setTimeout(() => {
       steps[fromStep].style.display = 'none';
       steps[toStep].style.display = 'block';
-      
       setTimeout(() => {
         steps[toStep].classList.remove('hidden');
       }, 100);
     }, delay);
   }
   
-  // Start button event listener
   elements.startButton.addEventListener('click', function() {
     transitionToStep(0, 1);
-    
-    // Start the sitting countdown
     let progress = 0;
     const sitTimer = setInterval(() => {
       progress += 1;
       elements.sitProgress.style.width = `${progress}%`;
-      
       if (progress >= 100) {
         clearInterval(sitTimer);
         transitionToStep(1, 2);
-        
-        // Animate standing up after a delay
         setTimeout(() => {
           const sitFigure = document.querySelector('.figure.sit');
           const standFigure = document.querySelector('.figure.stand');
           setTimeout(() => {
             sitFigure.style.opacity = '0';
             standFigure.style.opacity = '1';
-            
-            // Move to next step after animation completes
             setTimeout(() => {
               transitionToStep(2, 3);
-              
-              // Move to final step after a few seconds
               setTimeout(() => {
                 transitionToStep(3, 4);
               }, 5000);
@@ -661,14 +824,11 @@ document.addEventListener('DOMContentLoaded', function() {
           }, 500);
         }, 1000);
       }
-    }, 100); // 10 seconds total
+    }, 100);
   });
-  
-  // Begin exploration button
+
   elements.beginButton.addEventListener('click', function() {
-    // Fade out intro and show main content
     elements.introSection.style.opacity = '0';
-    
     setTimeout(() => {
       elements.introSection.style.display = 'none';
       elements.mainContent.style.opacity = '1';
@@ -676,7 +836,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 1000);
   });
   
-  // Allow skipping with ESC key
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && elements.introSection.style.display !== 'none') {
       elements.introSection.style.opacity = '0';
@@ -690,27 +849,20 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // --- Gamified Quiz ---
-  function setupQuiz() {
-    // Add event listeners to all quiz buttons
-    document.querySelectorAll('.quiz-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const questionDiv = this.closest('.quiz-question');
-        const resultDiv = questionDiv.querySelector('.quiz-result');
-        const isCorrect = this.hasAttribute('data-correct');
-        
-        // Reset all buttons in this question
-        questionDiv.querySelectorAll('.quiz-btn').forEach(btn => {
-          btn.classList.remove('selected-correct', 'selected-incorrect');
-        });
-        
-        // Highlight the clicked button
-        this.classList.add(isCorrect ? 'selected-correct' : 'selected-incorrect');
-        
-        // Show result message
-        resultDiv.className = `quiz-result ${isCorrect ? 'correct-answer' : 'incorrect-answer'}`;
-        resultDiv.innerHTML = this.getAttribute('data-feedback');
+function setupQuiz() {
+  document.querySelectorAll('.quiz-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const questionDiv = this.closest('.quiz-question');
+      const resultDiv = questionDiv.querySelector('.quiz-result');
+      const isCorrect = this.hasAttribute('data-correct');
+      
+      questionDiv.querySelectorAll('.quiz-btn').forEach(btn => {
+        btn.classList.remove('selected-correct', 'selected-incorrect');
       });
+      
+      this.classList.add(isCorrect ? 'selected-correct' : 'selected-incorrect');
+      resultDiv.className = `quiz-result ${isCorrect ? 'correct-answer' : 'incorrect-answer'}`;
+      resultDiv.innerHTML = this.getAttribute('data-feedback');
     });
-  }
-  
-  // Remove the highlightButton function as it's now integrated into setupQuiz
+  });
+}
