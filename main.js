@@ -935,12 +935,13 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
           const sitFigure = document.querySelector('.figure.sit');
           const standFigure = document.querySelector('.figure.stand');
-          const arrow = document.querySelector('.arrow');
+          // Remove the arrow reference and animation
+          // const arrow = document.querySelector('.arrow');
           
-          // First show the arrow
-          arrow.style.opacity = '1';
+          // Don't show the arrow anymore
+          // arrow.style.opacity = '1';
           
-          // Then animate the standing figure
+          // Just animate the standing figure directly
           setTimeout(() => {
             sitFigure.style.opacity = '0';
             standFigure.style.opacity = '1';
