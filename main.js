@@ -630,155 +630,6 @@ d3.csv("combined_data.csv", d => {
       .text(d => d.value.toFixed(1) + " mmHg");
   }
 
-  // --- Gamified Quiz ---
-  function setupQuiz() {
-    // Create quiz container with questions (excluding the third question)
-    d3.select("#quiz-container").html(`
-      <div class="quiz-section">
-        <div class="quiz-question">
-          <h4>Question 1: When you stand up, what happens to brain blood flow velocity (BFV)?</h4>
-          <div class="quiz-options">
-            <button id="quiz-q1-up" class="quiz-btn">It increases</button>
-            <button id="quiz-q1-down" class="quiz-btn">It decreases</button>
-            <button id="quiz-q1-steady" class="quiz-btn">It stays the same</button>
-          </div>
-          <div id="quiz-result-1" class="quiz-result"></div>
-        </div>
-        
-        <div class="quiz-question">
-          <h4>Question 2: What typically happens to blood pressure immediately after standing?</h4>
-          <div class="quiz-options">
-            <button id="quiz-q2-up" class="quiz-btn">It increases</button>
-            <button id="quiz-q2-down" class="quiz-btn">It decreases</button>
-            <button id="quiz-q2-steady" class="quiz-btn">It stays the same</button>
-          </div>
-          <div id="quiz-result-2" class="quiz-result"></div>
-        </div>
-        
-        <div class="quiz-question">
-          <h4>Question 3: What's the relationship between blood pressure and brain blood flow?</h4>
-          <div class="quiz-options">
-            <button id="quiz-q3-direct" class="quiz-btn">Directly proportional</button>
-            <button id="quiz-q3-inverse" class="quiz-btn">Inversely proportional</button>
-            <button id="quiz-q3-complex" class="quiz-btn">Complex relationship</button>
-          </div>
-          <div id="quiz-result-3" class="quiz-result"></div>
-        </div>
-        
-        <div class="quiz-question">
-          <h4>Question 4: Why is the initial drop in blood pressure when standing up potentially dangerous?</h4>
-          <div class="quiz-options">
-            <button id="quiz-q4-a" class="quiz-btn">It can cause fainting</button>
-            <button id="quiz-q4-b" class="quiz-btn">It damages blood vessels</button>
-            <button id="quiz-q4-c" class="quiz-btn">It has no real danger</button>
-          </div>
-          <div id="quiz-result-4" class="quiz-result"></div>
-        </div>
-      </div>
-    `);
-    
-    // Add event listeners for each question separately
-    // Question 1
-    d3.select("#quiz-q1-up").on("click", function() {
-      d3.select("#quiz-result-1")
-        .attr("class", "quiz-result correct-answer")
-        .html("✓ Correct! As you stand, BFV increases to compensate for the drop in blood pressure.");
-      highlightButton(this, true);
-    });
-    
-    d3.select("#quiz-q1-down").on("click", function() {
-      d3.select("#quiz-result-1")
-        .attr("class", "quiz-result incorrect-answer")
-        .html("✗ Not quite. BFV typically rises rather than drops to maintain brain perfusion.");
-      highlightButton(this, false);
-    });
-    
-    d3.select("#quiz-q1-steady").on("click", function() {
-      d3.select("#quiz-result-1")
-        .attr("class", "quiz-result incorrect-answer")
-        .html("✗ Not quite. There's a significant change in BFV when standing.");
-      highlightButton(this, false);
-    });
-    
-    // Question 2
-    d3.select("#quiz-q2-up").on("click", function() {
-      d3.select("#quiz-result-2")
-        .attr("class", "quiz-result incorrect-answer")
-        .html("✗ Not quite. Blood pressure typically drops briefly when standing due to gravity.");
-      highlightButton(this, false);
-    });
-    
-    d3.select("#quiz-q2-down").on("click", function() {
-      d3.select("#quiz-result-2")
-        .attr("class", "quiz-result correct-answer")
-        .html("✓ Correct! Blood pressure initially drops when standing due to gravity pulling blood away from the brain.");
-      highlightButton(this, true);
-    });
-    
-    d3.select("#quiz-q2-steady").on("click", function() {
-      d3.select("#quiz-result-2")
-        .attr("class", "quiz-result incorrect-answer")
-        .html("✗ Incorrect. There's a noticeable change in blood pressure when standing.");
-      highlightButton(this, false);
-    });
-    
-    // Question 3 (previously Question 4)
-    d3.select("#quiz-q3-direct").on("click", function() {
-      d3.select("#quiz-result-3")
-        .attr("class", "quiz-result incorrect-answer")
-        .html("✗ Not exactly. While they're related, it's not a simple direct relationship.");
-      highlightButton(this, false);
-    });
-    
-    d3.select("#quiz-q3-inverse").on("click", function() {
-      d3.select("#quiz-result-3")
-        .attr("class", "quiz-result incorrect-answer")
-        .html("✗ Not quite. They don't always move in opposite directions.");
-      highlightButton(this, false);
-    });
-    
-    d3.select("#quiz-q3-complex").on("click", function() {
-      d3.select("#quiz-result-3")
-        .attr("class", "quiz-result correct-answer")
-        .html("✓ Correct! The body uses complex regulatory mechanisms to maintain brain perfusion despite BP changes.");
-      highlightButton(this, true);
-    });
-    
-    // Question 4 (previously Question 5)
-    d3.select("#quiz-q4-a").on("click", function() {
-      d3.select("#quiz-result-4")
-        .attr("class", "quiz-result correct-answer")
-        .html("✓ Correct! The initial drop can reduce brain blood flow enough to cause dizziness or fainting, especially in some individuals.");
-      highlightButton(this, true);
-    });
-    
-    d3.select("#quiz-q4-b").on("click", function() {
-      d3.select("#quiz-result-4")
-        .attr("class", "quiz-result incorrect-answer")
-        .html("✗ Not quite. Brief blood pressure changes don't typically damage vessels.");
-      highlightButton(this, false);
-    });
-    
-    d3.select("#quiz-q4-c").on("click", function() {
-      d3.select("#quiz-result-4")
-        .attr("class", "quiz-result incorrect-answer")
-        .html("✗ Incorrect. The drop can be dangerous, especially for elderly or those with autonomic dysfunction.");
-      highlightButton(this, false);
-    });
-  }
-  
-  // Helper function to highlight selected buttons
-  function highlightButton(button, isCorrect) {
-    // Reset all buttons in the same question group
-    const parent = d3.select(button.parentNode);
-    parent.selectAll(".quiz-btn")
-      .classed("selected-correct", false)
-      .classed("selected-incorrect", false);
-    
-    // Highlight the clicked button
-    d3.select(button)
-      .classed(isCorrect ? "selected-correct" : "selected-incorrect", true);
-  }
 
   // --- Scrollytelling ---
   function setupScrollytelling() {
@@ -935,13 +786,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
           const sitFigure = document.querySelector('.figure.sit');
           const standFigure = document.querySelector('.figure.stand');
-          // Remove the arrow reference and animation
-          // const arrow = document.querySelector('.arrow');
-          
-          // Don't show the arrow anymore
-          // arrow.style.opacity = '1';
-          
-          // Just animate the standing figure directly
           setTimeout(() => {
             sitFigure.style.opacity = '0';
             standFigure.style.opacity = '1';
@@ -985,3 +829,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+// --- Gamified Quiz ---
+  function setupQuiz() {
+    // Add event listeners to all quiz buttons
+    document.querySelectorAll('.quiz-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const questionDiv = this.closest('.quiz-question');
+        const resultDiv = questionDiv.querySelector('.quiz-result');
+        const isCorrect = this.hasAttribute('data-correct');
+        
+        // Reset all buttons in this question
+        questionDiv.querySelectorAll('.quiz-btn').forEach(btn => {
+          btn.classList.remove('selected-correct', 'selected-incorrect');
+        });
+        
+        // Highlight the clicked button
+        this.classList.add(isCorrect ? 'selected-correct' : 'selected-incorrect');
+        
+        // Show result message
+        resultDiv.className = `quiz-result ${isCorrect ? 'correct-answer' : 'incorrect-answer'}`;
+        resultDiv.innerHTML = this.getAttribute('data-feedback');
+      });
+    });
+  }
+  
+  // Remove the highlightButton function as it's now integrated into setupQuiz
